@@ -1,0 +1,100 @@
+tools:
+- name: get_max_item
+  description: Returns the current highest Hacker News item ID.
+  entrypoint: get_max_item
+  input_schema:
+    properties: {}
+    required: []
+    type: object
+- name: get_top_stories
+  description: Returns compact YAML for the current top Hacker News stories.
+  entrypoint: get_top_stories
+  input_schema:
+    properties:
+      limit:
+        description: Maximum number of stories to hydrate and return. Defaults to 10 and is clamped to 25.
+        type: integer
+    required: []
+    type: object
+- name: get_new_stories
+  description: Returns compact YAML for the newest Hacker News stories.
+  entrypoint: get_new_stories
+  input_schema:
+    properties:
+      limit:
+        description: Maximum number of stories to hydrate and return. Defaults to 10 and is clamped to 25.
+        type: integer
+    required: []
+    type: object
+- name: get_best_stories
+  description: Returns compact YAML for the current best Hacker News stories.
+  entrypoint: get_best_stories
+  input_schema:
+    properties:
+      limit:
+        description: Maximum number of stories to hydrate and return. Defaults to 10 and is clamped to 25.
+        type: integer
+    required: []
+    type: object
+- name: get_ask_stories
+  description: Returns compact YAML for the latest Ask HN stories.
+  entrypoint: get_ask_stories
+  input_schema:
+    properties:
+      limit:
+        description: Maximum number of stories to hydrate and return. Defaults to 10 and is clamped to 25.
+        type: integer
+    required: []
+    type: object
+- name: get_show_stories
+  description: Returns compact YAML for the latest Show HN stories.
+  entrypoint: get_show_stories
+  input_schema:
+    properties:
+      limit:
+        description: Maximum number of stories to hydrate and return. Defaults to 10 and is clamped to 25.
+        type: integer
+    required: []
+    type: object
+- name: get_job_stories
+  description: Returns compact YAML for the latest Hacker News job stories.
+  entrypoint: get_job_stories
+  input_schema:
+    properties:
+      limit:
+        description: Maximum number of stories to hydrate and return. Defaults to 10 and is clamped to 25.
+        type: integer
+    required: []
+    type: object
+- name: get_item
+  description: Returns a compact YAML view of a single Hacker News item.
+  entrypoint: get_item
+  input_schema:
+    properties:
+      id:
+        description: Hacker News item ID.
+        type: integer
+    required:
+    - id
+    type: object
+- name: get_user
+  description: Returns a compact YAML view of a single Hacker News user.
+  entrypoint: get_user
+  input_schema:
+    properties:
+      id:
+        description: Hacker News user ID.
+        type: string
+      submitted_limit:
+        description: Maximum number of submitted item IDs to include. Defaults to 20 and is clamped to 50.
+        type: integer
+    required:
+    - id
+    type: object
+- name: get_updates
+  description: Returns the latest changed Hacker News item and profile IDs.
+  entrypoint: get_updates
+  input_schema:
+    properties: {}
+    required: []
+    type: object

@@ -1,0 +1,8 @@
+{
+  "wasm": [
+    { "path": "target/wasm32-unknown-unknown/release/hn_api_wasm.wasm" }
+  ],
+  "allowed_hosts": [
+    "hacker-news.firebaseio.com"
+  ]
+}

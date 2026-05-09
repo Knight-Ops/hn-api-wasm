@@ -1,0 +1,2 @@
+[registry.basilisklabs]
+index = "sparse+https://kellnr.basilisklabs.com/api/v1/crates"

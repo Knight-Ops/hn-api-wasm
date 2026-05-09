@@ -1,0 +1,3 @@
+{
+  "tools": ["ghcr.io/knight-ops/hn-api-wasm:main"]
+}

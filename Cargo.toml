@@ -1,0 +1,21 @@
+[package]
+name = "hn-api-wasm"
+description = "AI-friendly Wasm tools for Hacker News API endpoints"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+extism-pdk = "1.1.0"
+wasm-forge-pdk = { version = "0.1.1", registry = "basilisklabs" }
+serde = { version = "1.0", features = ["derive"] }
+serde_yaml = "0.9"
+schemars = "1.2.1"
+
+[build-dependencies]
+extism-pdk = "1.1.0"
+wasm-forge-pdk = { version = "0.1.1", registry = "basilisklabs" }
+serde = { version = "1.0", features = ["derive"] }
+schemars = "1.2.1"
