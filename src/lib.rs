@@ -12,6 +12,7 @@ const MAX_STORY_LIMIT: u32 = 25;
 const DEFAULT_SUBMITTED_LIMIT: u32 = 20;
 const MAX_SUBMITTED_LIMIT: u32 = 50;
 const PREVIEW_LIMIT: usize = 10;
+const HTTP_RETRY_ATTEMPTS: usize = 3;
 
 forge_types! {
     pub struct NoArgs {}
@@ -173,6 +174,31 @@ fn yaml_string<T: Serialize>(value: &T) -> FnResult<String> {
     Ok(serde_yaml::to_string(value)?.trim_end().to_string())
 }
 
+fn retry<T, F>(description: &str, mut operation: F) -> Result<T, Error>
+where
+    F: FnMut() -> Result<T, Error>,
+{
+    let mut last_error = None;
+
+    for attempt in 1..=HTTP_RETRY_ATTEMPTS {
+        match operation() {
+            Ok(value) => return Ok(value),
+            Err(err) => {
+                last_error = Some(err.to_string());
+
+                if attempt == HTTP_RETRY_ATTEMPTS {
+                    break;
+                }
+            }
+        }
+    }
+
+    let last_error = last_error.unwrap_or_else(|| "unknown error".to_string());
+    Err(Error::msg(format!(
+        "{description} failed after {HTTP_RETRY_ATTEMPTS} attempts: {last_error}"
+    )))
+}
+
 fn ensure_success<T>(path: &str, response: &http::HttpResponse) -> Result<T, Error>
 where
     T: for<'de> Deserialize<'de>,
@@ -198,11 +224,13 @@ fn get_json<T>(path: &str) -> Result<T, Error>
 where
     T: for<'de> Deserialize<'de>,
 {
-    let request = HttpRequest::new(build_url(path))
-        .with_method("GET")
-        .with_header("accept", "application/json");
-    let response = http::request::<()>(&request, None)?;
-    ensure_success(path, &response)
+    retry(&format!("Hacker News API request for {path}"), || {
+        let request = HttpRequest::new(build_url(path))
+            .with_method("GET")
+            .with_header("accept", "application/json");
+        let response = http::request::<()>(&request, None)?;
+        ensure_success(path, &response)
+    })
 }
 
 fn format_list_item(item: HnItem) -> ListItemSummary {
@@ -415,8 +443,14 @@ mod tests {
     #[test]
     fn clamps_story_limits() {
         assert_eq!(clamp_limit(None, DEFAULT_STORY_LIMIT, MAX_STORY_LIMIT), 10);
-        assert_eq!(clamp_limit(Some(0), DEFAULT_STORY_LIMIT, MAX_STORY_LIMIT), 1);
-        assert_eq!(clamp_limit(Some(99), DEFAULT_STORY_LIMIT, MAX_STORY_LIMIT), 25);
+        assert_eq!(
+            clamp_limit(Some(0), DEFAULT_STORY_LIMIT, MAX_STORY_LIMIT),
+            1
+        );
+        assert_eq!(
+            clamp_limit(Some(99), DEFAULT_STORY_LIMIT, MAX_STORY_LIMIT),
+            25
+        );
     }
 
     #[test]
@@ -428,6 +462,41 @@ mod tests {
         assert_eq!(
             clamp_limit(Some(500), DEFAULT_SUBMITTED_LIMIT, MAX_SUBMITTED_LIMIT),
             50
+        );
+    }
+
+    #[test]
+    fn retries_until_success() {
+        let mut attempts = 0;
+
+        let result: Result<u32, Error> = retry("test request", || {
+            attempts += 1;
+
+            if attempts < 3 {
+                Err(Error::msg("temporary failure"))
+            } else {
+                Ok(42)
+            }
+        });
+
+        assert_eq!(result.unwrap(), 42);
+        assert_eq!(attempts, 3);
+    }
+
+    #[test]
+    fn returns_last_error_after_retry_exhaustion() {
+        let mut attempts = 0;
+
+        let err = retry::<(), _>("test request", || {
+            attempts += 1;
+            Err(Error::msg(format!("failure #{attempts}")))
+        })
+        .unwrap_err();
+
+        assert_eq!(attempts, HTTP_RETRY_ATTEMPTS);
+        assert_eq!(
+            err.to_string(),
+            "test request failed after 3 attempts: failure #3"
         );
     }
 
